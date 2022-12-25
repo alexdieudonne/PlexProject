@@ -1,0 +1,71 @@
+version: '3.4'
+services:
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    ports:
+      - 5055:5055
+    restart: unless-stopped
+
+  sonarr:
+    depends_on:
+      - transmission-openvpn
+    image: linuxserver/sonarr:latest
+    container_name: sonarr_
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: always
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - TZ=Europe/Paris
+    volumes:
+      - ./plex/series:/tv
+      - ./plex/movies:/media
+    network_mode: service:transmission-openvpn
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - ./plex/series:/tv
+      - ./plex/movies:/media
+    restart: unless-stopped
+    network_mode: service:transmission-openvpn
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./plex/movies:/movies #optional
+      - ./plex/tv:/tv #optional
+    ports:
+      - 6767:6767
+    restart: unless-stopped

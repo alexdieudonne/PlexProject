@@ -1,0 +1,68 @@
+version: '3.4'
+services:
+  transmission-openvpn:
+    volumes:
+      - ./plex/series:/series
+      - ./plex/movies:/movies
+    stdin_open: true
+    environment:
+      - OPENVPN_PROVIDER=custom
+      - OPENVPN_CONFIG=node-fr-06.protonvpn.net.udp
+      - OPENVPN_USERNAME=${PROTONVPN_USERNAME}
+      - OPENVPN_PASSWORD=${PROTONVPN_PASSWORD}
+      - LOCAL_NETWORK=192.168.1.0/24
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    privileged: true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+    ports:
+      - 8989:8989
+      - 7878:7878
+      - 9117:9117
+      - 8080:8080
+      - 8112:8112
+    image: ebrianne/docker-deluge-openvpn
+
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - DELUGE_LOGLEVEL=error #optional
+    volumes:
+      - ./plex/movies:/movies
+      - ./plex/series:/series
+    network_mode: service:transmission-openvpn
+    restart: unless-stopped
+
+  plex:
+    container_name: plex
+    image: plexinc/pms-docker
+    restart: unless-stopped
+    ports:
+      - 32400:32400/tcp
+    devices:
+      - /dev/dri/
+    environment:
+      - TZ=Europe/Paris
+      - PLEX_CLAIM=claim---8vytZAH5wbLThdgLN7
+      - ADVERTISE_IP=http://172.20.0.1:32400
+    volumes:
+      - ./plex/movies:/media
+
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    ports:
+      - 5055:5055
+    restart: unless-stopped
