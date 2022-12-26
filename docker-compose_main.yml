@@ -4,6 +4,8 @@ services:
     volumes:
       - ./plex/series:/series
       - ./plex/movies:/movies
+      - ./vpn/:/config
+      - ./vpn:/etc/openvpn/custom/
     stdin_open: true
     environment:
       - OPENVPN_PROVIDER=custom
@@ -20,9 +22,6 @@ services:
       options:
         max-size: 10m
     ports:
-      - 8989:8989
-      - 7878:7878
-      - 9117:9117
       - 8080:8080
       - 8112:8112
     image: ebrianne/docker-deluge-openvpn
@@ -46,15 +45,18 @@ services:
     image: plexinc/pms-docker
     restart: unless-stopped
     ports:
-      - 32400:32400/tcp
-    devices:
-      - /dev/dri/
+      - 32400:32400
+    # devices:
+    #   - /dev/dri/
     environment:
       - TZ=Europe/Paris
-      - PLEX_CLAIM=claim---8vytZAH5wbLThdgLN7
-      - ADVERTISE_IP=http://172.20.0.1:32400
+      - VERSION=docker
+      - PUID=1000
+      - PGID=1000
+      - PLEX_CLAIM=${PLEX_CLAIM}
     volumes:
-      - ./plex/movies:/media
+      - ./plex/movies:/movies
+      - ./plex/series:/series
 
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest
@@ -66,3 +68,8 @@ services:
     ports:
       - 5055:5055
     restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: plex_school

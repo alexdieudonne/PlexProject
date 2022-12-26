@@ -11,22 +11,13 @@ services:
       - 9696:9696
     restart: unless-stopped
 
-  overseerr:
-    image: lscr.io/linuxserver/overseerr:latest
-    container_name: overseerr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
-    ports:
-      - 5055:5055
-    restart: unless-stopped
-
   sonarr:
+    ports:
+      - 8989:8989
     depends_on:
       - transmission-openvpn
     image: linuxserver/sonarr:latest
-    container_name: sonarr_
+    container_name: sonarr
     cap_add:
       - NET_ADMIN
       - NET_RAW
@@ -38,10 +29,11 @@ services:
     volumes:
       - ./plex/series:/tv
       - ./plex/movies:/media
-    network_mode: service:transmission-openvpn
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
+    ports:
+      - 7878:7878
     container_name: radarr
     cap_add:
       - NET_ADMIN
@@ -54,7 +46,6 @@ services:
       - ./plex/series:/tv
       - ./plex/movies:/media
     restart: unless-stopped
-    network_mode: service:transmission-openvpn
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -65,7 +56,12 @@ services:
       - TZ=Europe/London
     volumes:
       - ./plex/movies:/movies #optional
-      - ./plex/tv:/tv #optional
+      - ./plex/series:/tv #optional
     ports:
       - 6767:6767
     restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: plex_school
