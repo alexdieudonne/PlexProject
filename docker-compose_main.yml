@@ -2,16 +2,13 @@ version: '3.4'
 services:
   transmission-openvpn:
     volumes:
-      - ./plex/series:/series
-      - ./plex/movies:/movies
-      - ./vpn/:/config
       - ./vpn:/etc/openvpn/custom/
     stdin_open: true
     environment:
       - OPENVPN_PROVIDER=custom
-      - OPENVPN_CONFIG=node-fr-06.protonvpn.net.udp
-      - OPENVPN_USERNAME=${PROTONVPN_USERNAME}
-      - OPENVPN_PASSWORD=${PROTONVPN_PASSWORD}
+      - OPENVPN_CONFIG=node-fr-10.protonvpn.net.udp
+      - OPENVPN_USERNAME=${OPENVPN_USERNAME}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
       - LOCAL_NETWORK=192.168.1.0/24
     cap_add:
       - NET_ADMIN
@@ -54,7 +51,7 @@ services:
       - PUID=1000
       - PGID=1000
       - PLEX_CLAIM=${PLEX_CLAIM}
-      
+
     volumes:
       - ./plex/movies:/movies
       - ./plex/series:/series
@@ -68,6 +65,39 @@ services:
       - TZ=Europe/Paris
     ports:
       - 5055:5055
+    restart: unless-stopped
+
+  swag:
+    image: lscr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - URL=${SWAG_DOMAIN_URL}
+      - SUBDOMAINS=${SWAG_SUBDOMAIN_URLS:-www,}
+      - VALIDATION=http
+      - DNSPLUGIN=cloudflare #optional
+      - DUCKDNSTOKEN=${DUCKDNSTOKEN} #optional
+      - ONLY_SUBDOMAINS=false #optional
+      - STAGING=false #optional
+    volumes:
+      - ./swag/config:/config
+    ports:
+      - 443:443
+      - 80:80 #optional
+    restart: unless-stopped
+
+  authelia:
+    image: ghcr.io/authelia/authelia:4.34.6
+    container_name: authelia
+    user: "1000:1000"
+    environment:
+      - TZ=America/New_York
+    volumes:
+      - ./authelia/config:/config
     restart: unless-stopped
 
 networks:
