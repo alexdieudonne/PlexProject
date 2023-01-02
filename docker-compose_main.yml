@@ -54,6 +54,7 @@ services:
       - PUID=1000
       - PGID=1000
       - PLEX_CLAIM=${PLEX_CLAIM}
+      
     volumes:
       - ./plex/movies:/movies
       - ./plex/series:/series
